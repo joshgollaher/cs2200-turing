@@ -115,5 +115,8 @@ fn main() {
         .sorted_by_key(|tm| sim(tm.clone(), 7, 12).unwrap()).collect::<Vec<_>>();
 
     println!("Got {} turing machines.", valid_tms.len());
-    println!("Machine:\n{}", valid_tms[0]);
+
+    if valid_tms.len() > 0 {
+        println!("Machine:\n{}", valid_tms[0]);
+    }
 }
