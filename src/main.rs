@@ -46,7 +46,7 @@ struct TM {
 impl Display for TM {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for ((state, read), transition) in &self.transitions {
-            writeln!(f, "{},{}\n{}", state, read, transition);
+            writeln!(f, "{},{}\n{}\n", state, read, transition);
         }
 
         Ok(())
@@ -91,6 +91,10 @@ fn generate_all_turing_machines() -> Vec<TM> {
 }
 
 fn main() {
+
+    const MIN_STEPS: usize = 7;
+    const MAX_STEPS: usize = 12;
+
     let all_tm = generate_all_turing_machines();
     let valid_tms = all_tm.into_iter().filter(|tm| {
         let mut valid = false;
@@ -111,8 +115,8 @@ fn main() {
         }
 
         valid
-    }).filter(|tm | sim(tm.clone(), 7, 12).is_some())
-        .sorted_by_key(|tm| sim(tm.clone(), 7, 12).unwrap()).collect::<Vec<_>>();
+    }).filter(|tm | sim(tm.clone(), MIN_STEPS, MAX_STEPS).is_some())
+        .sorted_by_key(|tm| sim(tm.clone(), MIN_STEPS, MAX_STEPS).unwrap()).collect::<Vec<_>>();
 
     println!("Got {} turing machines.", valid_tms.len());
 
