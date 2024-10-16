@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::string::ToString;
 use rayon::prelude::*;
+use crate::sim::sim;
 
 
 fn symbols() -> [String; 3] {
@@ -33,7 +34,7 @@ struct Transition {
 
 impl Display for Transition {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Next: {}, Write: {}, Move: {}", self.next_state, self.write, self.movement)
+        write!(f, "{},{},{}", self.next_state, self.write, self.movement)
     }
 }
 
@@ -45,7 +46,7 @@ struct TM {
 impl Display for TM {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for ((state, read), transition) in &self.transitions {
-            writeln!(f, "State: {}, Read: {} => {}", state, read, transition);
+            writeln!(f, "{},{}\n{}", state, read, transition);
         }
 
         Ok(())
@@ -70,17 +71,17 @@ fn generate_all_turing_machines() -> Vec<TM> {
 
     let states = states();
     let symbols = symbols();
-    let ss_pairs = states.iter().take(2).cartesian_product(symbols.iter());
+    let ss_pairs = states.iter().take(2).cartesian_product(symbols.iter()).collect::<Vec<_>>();
 
     all_transitions
         .iter()
-        .combinations_with_replacement(7)
+        .combinations_with_replacement(ss_pairs.len())
         .map(|transitions| {
             let mut machine = TM {
                 transitions: HashMap::new(),
             };
 
-            for ((state, symbol), transition) in ss_pairs.clone().zip(transitions) {
+            for ((state, symbol), transition) in ss_pairs.clone().into_iter().zip(transitions) {
                 machine.transitions.insert((state.clone(), symbol.clone()), (*transition).clone());
             }
 
@@ -91,7 +92,7 @@ fn generate_all_turing_machines() -> Vec<TM> {
 
 fn main() {
     let all_tm = generate_all_turing_machines();
-    let valid_tm = all_tm.into_iter().filter(|tm| {
+    let valid_tms = all_tm.into_iter().filter(|tm| {
         let mut valid = false;
         for transition in tm.transitions.values() {
             if transition.next_state == "qH".to_string() {
@@ -110,8 +111,9 @@ fn main() {
         }
 
         valid
-    }).collect::<Vec<_>>();
+    }).filter(|tm | sim(tm.clone(), 7, 12).is_some())
+        .sorted_by_key(|tm| sim(tm.clone(), 7, 12).unwrap()).collect::<Vec<_>>();
 
-    println!("Got {} turing machines.", valid_tm.len());
-    println!("{}", valid_tm[0]);
+    println!("Got {} turing machines.", valid_tms.len());
+    println!("Machine:\n{}", valid_tms[0]);
 }
